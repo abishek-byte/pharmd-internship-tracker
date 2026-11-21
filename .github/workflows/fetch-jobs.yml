@@ -1,7 +1,43 @@
-- name: Debug secrets
-  run: |
-    echo "TOKEN starts with: ${NOTION_TOKEN:0:4}"
-    echo "DB_ID starts with: ${NOTION_DB_ID:0:4}"
-  env:
-    NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-    NOTION_DB_ID: ${{ secrets.NOTION_DB_ID }}
+name: Fetch PharmD Internships
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+      NOTION_DB_ID: ${{ secrets.NOTION_DB_ID }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Debug secrets
+        run: |
+          echo "TOKEN starts with: ${NOTION_TOKEN:0:4}"
+          echo "DB_ID starts with: ${NOTION_DB_ID:0:4}"
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DB_ID: ${{ secrets.NOTION_DB_ID }}
+
+      - name: Fetch and sync jobs
+        run: python fetch_jobs.py
+
+      - name: Log completion
+        run: echo "Job fetch completed at $(date)"
