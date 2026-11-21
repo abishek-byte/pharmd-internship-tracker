@@ -1,0 +1,36 @@
+name: Fetch PharmD Internships
+
+on:
+  schedule:
+    # Runs daily at 8:00 AM UTC (adjust for your timezone)
+    - cron: "0 8 * * *"
+  workflow_dispatch:  # Manual trigger from GitHub UI
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+      NOTION_DB_ID: ${{ secrets.NOTION_DB_ID }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch and sync jobs
+        run: python fetch_jobs.py
+
+      - name: Log completion
+        run: echo "Job fetch completed at $(date)"
